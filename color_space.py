@@ -28,21 +28,14 @@ def xyz_to_rgb(images: ndarray) -> ndarray:
 	:return: The input images in RGB color space (B, H, W, C).
 	"""
 
-	images = images / 100.0
-
 	magic_constants = np.array([
-		[3.24048134, -1.53715152, -0.49853633],
-		[-0.96925495, 1.87599, 0.04155593],
-		[0.05564664, -0.20404134, 1.05731107]
+		[3.2404521753, -1.5371373864, -0.4985322193],
+		[-0.9692637934, 1.8760095563, 0.0415570448],
+		[0.0556432260, -0.2040257870, 1.0572250515]
 	])
 
 	images_rgb = images @ magic_constants.T
-
-	mask = images_rgb > 0.0031308
-	images_rgb[mask] = 1.055 * np.power(images_rgb[mask], 1.0 / 2.4) - 0.055
-	images_rgb[~mask] *= 12.92
-
-	return np.clip(images_rgb, 0.0, 1.0)
+	return images_rgb
 
 
 def xyz_to_lab(images: ndarray) -> ndarray:
