@@ -41,8 +41,8 @@ def xyz_to_rgb(images: ndarray) -> ndarray:
 def xyz_to_lab(images: ndarray) -> ndarray:
 	"""
 	Converts XYZ images to LAB color space.
-	:param images:  The input XYZ images (B, H, W, C).
-	:return:  The input images in LAB color space (B, H, W, C).
+	:param images: The input XYZ images (B, H, W, C).
+	:return: The input images in LAB color space (B, H, W, C).
 	"""
 
 	magic_constants = np.array([0.950456, 1.0, 1.088754])
@@ -50,11 +50,21 @@ def xyz_to_lab(images: ndarray) -> ndarray:
 
 	mask = images > 0.008856
 	images[mask] = np.power(images[mask], 1.0 / 3.0)
+
+	# TODO: Benchmark what is faster. Also with a real world example and not just microbenchmark, please.
+	# lightness = images[..., 1].copy()
+	# lightness[mask[..., 1]] = 116.0 * lightness[mask[..., 1]] - 16.0
+	# lightness[~mask[..., 1]] *= 903.3
+	mask_light = mask[..., 1]
+	lightness = np.empty_like(images[..., 1])
+	lightness[mask] = 116.0 * images[..., 1][mask_light] - 16.0
+	lightness[~mask] = 903.3 * images[..., 1][~mask_light]
+
 	images[~mask] = 7.787 * images[~mask] + 16.0 / 116.0
 
 	images = np.stack(
 		[
-			116.0 * images[..., 1] - 16.0,
+			lightness,
 			500.0 * (images[..., 0] - images[..., 1]),
 			200.0 * (images[..., 1] - images[..., 2])
 		], axis=-1)
