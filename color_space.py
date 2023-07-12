@@ -75,22 +75,31 @@ def xyz_to_lab(images: ndarray) -> ndarray:
 def lab_to_xyz(images: ndarray) -> ndarray:
 	"""
 	Converts LAB images to XYZ color space.
-	:param images:  The input LAB images (B, H, W, C).
-	:return:  The input images in XYZ color space (B, H, W, C).
+	:param images: The input LAB images (B, H, W, C).
+	:return: The input images in XYZ color space (B, H, W, C).
 	"""
 
-	y = (images[..., 0] + 16.0) / 116.0
-	xyz = np.stack([
-		images[..., 1] / 500.0 + y,
-		y,
-		y - images[..., 2] / 200.0
-	], axis=-1)
+	y = images[..., 0] / 903.3
+	mask = y > 0.008856
+	y[mask] = ((images[..., 0][mask] + 16.0) / 116.0) ** 3.0
 
-	# mask = xyz > 0.206893
-	mask = xyz > 0.008856
-	xyz[mask] = np.power(xyz[mask], 3.0)
-	xyz[~mask] = (xyz[~mask] - 16.0 / 116.0) / 7.787
+	f_of_y = y.copy()
+	f_of_y[mask] = np.power(y[mask], 1.0 / 3.0)
+	f_of_y[~mask] = 7.787 * y[~mask] + 16.0 / 116.0
 
+	f_of_x = images[..., 1] / 500.0, + f_of_y
+	x = (f_of_x - 16.0 / 116.0) / 7.787
+	# mask = x > 0.206893
+	mask = x > 0.008856
+	x[mask] = np.power(f_of_x[mask], 3.0)
+
+	f_of_z = -(images[..., 2] / 200.0 - f_of_y)
+	z = (f_of_z - 16.0 / 116.0) / 7.787
+	# mask = z > 0.206893
+	mask = z > 0.008856
+	z[mask] = np.power(f_of_z[mask], 3.0)
+
+	xyz = np.stack([x, y, z], axis=-1)
 	magic_constants = np.array([0.950456, 1.0, 1.088754])
 	xyz *= magic_constants
 
