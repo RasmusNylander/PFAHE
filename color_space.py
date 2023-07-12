@@ -10,23 +10,13 @@ def rgb_to_xyz(images: ndarray) -> ndarray:
 	:return: The input images in XYZ color space (B, H, W, C).
 	"""
 
-	# images = images.astype(np.float32) / 255.0
-	images = images.copy()
-	mask = images > 0.04045
-
-	images[mask] = np.power((images[mask] + 0.055) / 1.055, 2.4)
-	images[~mask] /= 12.92
-
-	images *= 100.0
-
 	magic_constants = np.array([
-		[0.412453, 0.357580, 0.180423],
-		[0.212671, 0.715160, 0.072169],
-		[0.019334, 0.119193, 0.950227]
+		[0.4124564566, 0.3575760779, 0.1804374833],
+		[0.2126725044, 0.7151521552, 0.0721743070],
+		[0.0193338847, 0.1191920250, 0.9503040953]
 	])
 
 	images_xyz = images @ magic_constants.T
-
 	return images_xyz
 
 
